@@ -225,6 +225,7 @@ module.exports = function checkPath (packageName, basePath, overrides, includeDe
     }
   }
 
+  var licensesRaw = []
   var license = 'unknown'
   var licenseFilePath
 
@@ -242,7 +243,8 @@ module.exports = function checkPath (packageName, basePath, overrides, includeDe
     } else if (packageJson.license) {
       licenses.push(packageJson.license)
     }
-    license = licenses.map(getJsonLicense).map(formatLicense).join(', ')
+    licensesRaw = licenses.map(getJsonLicense)
+    license = licensesRaw.map(formatLicense).join(', ')
   } else {
     // Look for file with "license" or "copying" in its name
     var files = fs.readdirSync(basePath)
@@ -250,7 +252,8 @@ module.exports = function checkPath (packageName, basePath, overrides, includeDe
       if (/licen[sc]e/i.test(name) || /copying.*/i.test(name)) {
         var file = path.join(basePath, name)
         if (fs.statSync(file).isFile()) {
-          license = formatLicense(getFileLicense(file))
+          licensesRaw = [getFileLicense(file)]
+          license = formatLicense(licensesRaw[0])
           licenseFilePath = file
           return true
         }
@@ -265,6 +268,7 @@ module.exports = function checkPath (packageName, basePath, overrides, includeDe
           if (fs.statSync(file).isFile()) {
             var result = getReadmeLicense(file)
             if (result) {
+              licensesRaw = [result]
               license = formatLicense(result)
               licenseFilePath = file
               return license !== 'nomatch'
@@ -303,6 +307,7 @@ module.exports = function checkPath (packageName, basePath, overrides, includeDe
     name: packageJson.name,
     version: packageJson.version,
     license: license,
+    licensesRaw: licensesRaw,
     licenseFile: licenseFilePath && path.relative(process.cwd(), licenseFilePath),
     deps: dependencies.sort(function (dep1, dep2) { return dep1.name.localeCompare(dep2.name) })
   }
