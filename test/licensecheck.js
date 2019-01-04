@@ -9,6 +9,7 @@ suite('licensecheck')
 
 function replacer (key, value) {
   switch (key) {
+    case 'licensesRaw':
     case 'licenseFile':
     case 'version':
       return undefined
